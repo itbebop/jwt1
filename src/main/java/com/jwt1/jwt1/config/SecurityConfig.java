@@ -6,10 +6,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.filter.CorsFilter;
 
-import com.jwt1.jwt1.filter.MyFilter1;
+import com.jwt1.jwt1.filter.MyFilter3;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,9 +22,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.addFilterBefore(new MyFilter1(), BasicAuthenticationFilter.class); // 처음에 addFilter -> securityFilter가 아니므로
-                                                                                // before/after로 걸라고함
+
         http.csrf(csrf -> csrf.disable());
+
+        http.addFilterBefore(new MyFilter3(), SecurityContextHolderFilter.class); // -> Security filter 중 가장 처음에 나오는 필터
+                                                                                  // -> 전에 나오도록 함
+        // 처음에 addFilter -> securityFilter가 아니므로
+        // before/after로 걸라고함, 굳이 securityFilter chain으로 걸 필요없이
+        // FilterConfig, 각 customfilter 파일 만들어서 걸어줄 수 있다
+        // 단 순서는 security filter가 먼저 실행된 후 custom filter가 실행됨
         http
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilter(corsFilter)// @CrossOrigin(인증없을때), 시큐리티 필터에 등록(인증필요할때)
