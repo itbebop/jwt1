@@ -1,11 +1,11 @@
-package com.jwt1.jwt1.config;
+package com.cors.jwt1.config;
 
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.jwt1.jwt1.filter.MyFilter1;
-import com.jwt1.jwt1.filter.MyFilter2;
+import com.cors.jwt1.filter.MyFilter1;
+import com.cors.jwt1.filter.MyFilter2;
 
 @Configuration
 public class FilterConfig {

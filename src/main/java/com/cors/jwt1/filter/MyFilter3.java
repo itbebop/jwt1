@@ -1,4 +1,4 @@
-package com.jwt1.jwt1.filter;
+package com.cors.jwt1.filter;
 
 import java.io.IOException;
 import java.io.PrintWriter;

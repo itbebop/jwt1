@@ -1,12 +1,12 @@
-package com.jwt1.jwt1.auth;
+package com.cors.jwt1.config.auth;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.jwt1.jwt1.model.User;
-import com.jwt1.jwt1.repository.UserRepository;
+import com.cors.jwt1.model.User;
+import com.cors.jwt1.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.jwt1.jwt1.auth;
+package com.cors.jwt1.config.auth;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,7 +6,7 @@ import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.jwt1.jwt1.model.User;
+import com.cors.jwt1.model.User;
 
 public class PrincipalDetails implements UserDetails {
     private User user;
@@ -22,6 +22,10 @@ public class PrincipalDetails implements UserDetails {
             authorities.add(() -> r);
         });
         return authorities;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     @Override

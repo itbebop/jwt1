@@ -1,4 +1,4 @@
-package com.jwt1.jwt1.config;
+package com.cors.jwt1.config;
 
 public @interface MapperScan {
 
