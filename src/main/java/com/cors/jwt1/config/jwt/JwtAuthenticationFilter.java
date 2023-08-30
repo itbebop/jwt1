@@ -2,6 +2,8 @@ package com.cors.jwt1.config.jwt;
 
 import java.io.IOException;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,7 +53,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
 
-        System.out.println("JwtAuthenticationFilter : 진입");
+        System.out.println("JwtAuthenticationFilter 진입");
         // BufferedReader br = request.getReader();
         // String input = null;
         // while ((input = br.readLine()) != null)
@@ -71,7 +73,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                     loginRequestDto.getUsername(),
                     loginRequestDto.getPassword());
 
-            System.out.println("============================ 토큰생성완료");
+            System.out.println("========================= 토큰생성완료");
 
             // authenticate() 함수가 호출 되면 인증 프로바이더가 유저 디테일 서비스의
             // loadUserByUsername(토큰의 첫번째 파라메터) 를 호출하고
@@ -82,18 +84,36 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             // Tip: 인증 프로바이더의 디폴트 서비스는 UserDetailsService 타입
             // Tip: 인증 프로바이더의 디폴트 암호화 방식은 BCryptPasswordEncoder
             // 결론은 인증 프로바이더에게 알려줄 필요가 없음.
+
+            // PrincipalDetailsService의 loadUserByUsername()함수가 실행된 후 정상이면 authentication이
+            // 리턴됨
+            // 아래의 authentication가 만들어진 것은 DB에 있는 username과 paw가 일치한다는 것
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-            // id, pw가 출력되는 건 authentication 객체가 session영역에 저장된 것 => 즉, 로그인이 되었다는 것
+            // 아래에서 id, pw가 출력되는 건 authentication 객체가 session영역에 저장된 것 => 즉, 로그인이 되었다는 것
             PrincipalDetails principalDetailis = (PrincipalDetails) authentication.getPrincipal();
-            System.out.println("Authentication : " + principalDetailis.getUser().getUsername());
-            System.out.println("==============================1");
+            System.out.println("================= 로그인이 완료됨. username: " + principalDetailis.getUser().getUsername());
 
-            return authentication;
+            return authentication; // authentication을 반환하여 session에 저장
+            // 리턴의 이유는 권한 관리를 security가 대신 해주기 때문에
+            // 굳이 JWT 토큰을 사용하면서 세션을 만들 이유가 없음. 단지 권한 처리때문에 sessions에 넣어주는 것
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("==============================2");
         return null;
+    }
+
+    /*
+     * <정리>
+     * 실행 순서
+     * 1. attemptAuthentication 실행 -> 인증 완료
+     * 2. successfultAuthenticaion 실행
+     * 3. JWT 토큰을 만들어서 request 요청한 사용자에게 JWT 토큰을 response 해줌
+     */
+    @Override
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain, Authentication authResult) throws IOException, ServletException {
+        System.out.println("================= 인증이 완료됨");
+        super.successfulAuthentication(request, response, filterChain, authResult);
     }
 }
