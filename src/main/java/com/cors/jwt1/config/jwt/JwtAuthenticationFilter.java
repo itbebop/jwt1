@@ -1,6 +1,7 @@
 package com.cors.jwt1.config.jwt;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -13,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.cors.jwt1.config.auth.PrincipalDetails;
 import com.cors.jwt1.dto.LoginRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,11 +112,42 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      * 1. attemptAuthentication 실행 -> 인증 완료
      * 2. successfultAuthenticaion 실행
      * 3. JWT 토큰을 만들어서 request 요청한 사용자에게 JWT 토큰을 response 해줌
+     * 
+     * <JWT아닌 경우>
+     * 1. 클라이언트 : username, password -> 로그인
+     * 2. 서버 : 세션 Id 생성
+     * 3. 클라이언트 :쿠키로 세션 Id를 응답함
+     * -> 클라이언트가 요청할 때마다 쿠키값 세션 Id를 항상 들고 서버쪽으로 요청하기 때문에
+     * 서버는 세션 Id가 유효한지 판단해서 유효하면 인증이 필요한 페이지로 접근하도록 함
+     * cf) 세션Id 판단방법
+     * -> session.getAttribute("세션id") 해서 확인
+     * <JWT>
+     * 1. 클라이언트 : username, password -> 로그인
+     * 2. 서버 : JWT 토큰을 생성
+     * 3. 클라이언트: JWT토큰으로 응답
+     * -> 클라이언트가 요청할 때마다 JWT토큰을 가지고 요청하므로
+     * 서버는 JWT토큰이 유효한지를 판단함(필터를 만들어야 함)
      */
+
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
             FilterChain filterChain, Authentication authResult) throws IOException, ServletException {
         System.out.println("================= 인증이 완료됨");
-        super.successfulAuthentication(request, response, filterChain, authResult);
+        PrincipalDetails principalDetailis = (PrincipalDetails) authResult.getPrincipal();
+
+        // RSA방식은 아니고 Hash암호방식
+        String jwtToken = JWT.create()
+                .withSubject(principalDetailis.getUsername())
+                // .withSubject("cos토큰")
+                // .withExpiresAt(new Date(System.currentTimeMillis() +
+                // JwtProperties.EXPIRATION_TIME))
+                // .withExpiresAt(new Date(System.currentTimeMillis() + (60000 * 10))) // 10분
+                .withClaim("username", principalDetailis.getUser().getUsername())
+                .sign(Algorithm.HMAC512(JwtProperties.SECRET));
+        // .sign(Algorithm.HMAC512("cos"));
+
+        response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX +
+                jwtToken);
+        // response.addHeader("Authorization", "Bearer" + jwtToken);
     }
 }

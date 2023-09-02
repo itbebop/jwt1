@@ -2,6 +2,7 @@ package com.cors.jwt1.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,7 +13,9 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.filter.CorsFilter;
 
 import com.cors.jwt1.config.jwt.JwtAuthenticationFilter;
+import com.cors.jwt1.config.jwt.JwtAuthorizationFilter;
 import com.cors.jwt1.filter.MyFilter3;
+import com.cors.jwt1.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +26,7 @@ public class SecurityConfig {
 
     private final CorsFilter corsFilter;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final UserRepository userRepository;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -32,7 +36,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(csrf -> csrf.disable());
+        http
+                .csrf(csrf -> csrf.disable());
 
         http.addFilterBefore(new MyFilter3(), SecurityContextHolderFilter.class); // -> Security filter 중 가장 처음에 나오는 필터
                                                                                   // -> 전에 나오도록 함
@@ -46,12 +51,30 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable()) // id, pw 암호화 되도록
 
                 .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()))
+                .addFilter(new JwtAuthorizationFilter(authenticationConfiguration.getAuthenticationManager(),
+                        userRepository))
                 .formLogin(login -> login.disable())
-                .authorizeHttpRequests() // 인증 시작
-                .antMatchers("/api/v1/user/**").hasAuthority("ROLE_USER, ROLE_MANAGER, ROLE_ADMIN")
-                .antMatchers("api/v1/manager/**").hasAuthority("ROLE_MANAGER, ROLE_ADMIN")
-                .antMatchers("api/v1/admin/**").hasAuthority("ROLE_ADMIN")
+                .authorizeRequests()
+                .antMatchers("/api/v1/user/**")
+                .access("hasRole('ROLE_USER') or hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
+                .antMatchers("/api/v1/manager/**")
+                .access("hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
+                .antMatchers("/api/v1/admin/**")
+                .access("hasRole('ROLE_ADMIN')")
                 .anyRequest().permitAll();
+        // 오류남
+        // Unsatisfied dependency expressed through method 'setFilterChains'parameter 0
+        // .authorizeRequests(requests -> requests
+        // .antMatchers("/api/v1/user/**").access("hasRole('ROLE_USER')")
+        // .antMatchers("/api/v1/manager/**").access("hasRole('ROLE_MANAGER')")
+        // .antMatchers("/api/v1/admin/**").access("hasRole('ROLE_MANAGER')")
+        // .anyRequest().permitAll());
+        // 권한 체크안됨
+        // .authorizeHttpRequests() // 인증 시작
+        // .antMatchers("api/v1/user/**").hasAnyAuthority("ROLE_USER")
+        // .antMatchers("api/v1/manager/**").hasAnyAuthority("ROLE_MANAGER")
+        // .antMatchers("api/v1/admin/**").hasAuthority("ROLE_ADMIN")
+        // .anyRequest().permitAll();
 
         return http.build();
     }

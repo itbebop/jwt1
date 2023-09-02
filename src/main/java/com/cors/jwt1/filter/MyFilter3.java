@@ -33,13 +33,16 @@ public class MyFilter3 implements Filter {
         if (req.getMethod().equals("POST")) {
             System.out.println("=====Post 요청됨=====");
             String headerAuth = req.getHeader("Authorization");
-            System.out.println("headerAuth : " + headerAuth);
-            if (headerAuth.equals("cors")) { // headerAuth는 한글 안됨
-                chain.doFilter(req, res);
-            } else {
-                PrintWriter out = res.getWriter();
-                out.println("인증안됨");
-            }
+            System.out.println("headerAuth in 필터3 : " + headerAuth);
+            /*
+             * if (headerAuth.equals("cors")) { // headerAuth는 한글 안됨
+             * chain.doFilter(req, res);
+             * } else {
+             * PrintWriter out = res.getWriter();
+             * out.println("인증안됨");
+             * }
+             */
+            chain.doFilter(req, res);
         }
     }
 
